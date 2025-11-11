@@ -10,7 +10,23 @@ The purpose of this repository is to serve as an exploration on the ramification
 
 ## Repository Contents
 
-## Content and Data
+The file structure is formatted as a directory tree and may be seen below:
+
+```         
+├── .gitignore
+├── .Rhistory
+├── data
+│   ├── ejscreen
+│   ├── gbif-birds-LA
+│   ├── mapping-inequality
+├── EDS223-HW2.Rproj
+├── HW2_files
+│   ├── figure-html
+│   ├── libs
+├── HW2.html
+├── HW2.qmd
+├── README.md
+```
 
 Within the repository you will find the main analysis file "HW2.qmd" which contains all the coding for the analysis, the "data" folder which contains the files used for analysis (EJScreen shapefile, LA bird observations, and a historical polygon layer of Home Owners' Loan Corporation, or HOLC, zoned areas). Lastly, you will find this ReadMe markdown file.
 
@@ -22,12 +38,13 @@ Miles, Monica Lynn. “(PDF) Mapping for Justice: How Ejscreen Advances Science 
 
 Wharton, David, and Abhinanda Bhattacharyya. “If L.A. Adds City Council Seats, How Would It Work? These Charts Show The Possibilities.” Los Angeles Times, Los Angeles Times, 2 Oct. 2023, www.latimes.com/california/story/2023-10-02/los-angeles-city-council-expansion.
 
-## Licenses
-
-All data required for this repository is readily available at the links provided:
-
-<https://pedp-ejscreen.azurewebsites.net/>
-
-<https://dsl.richmond.edu/panorama/redlining/#loc=5/39.1/-94.58>
+## Licenses and Data Access
 
 <https://eds-223-geospatial.github.io/assignments/gbif.org>
+
+Do note that the official government run EJ_Screen website <https://www.epa.gov/ejscreen> is no longer accessible due to cuts made under the Trump Administration. However, this link <https://pedp-ejscreen.azurewebsites.net/> is an unofficial reproduction of the tool.
+
+The redlining geodatabase is available at this link: <https://dsl.richmond.edu/panorama/redlining/#loc=5/39.1/-94.58>
+
+and lastly, the Global Biodiversity Information Facility is the source for the LA Birds shapefile. The website may be found here: \
+<https://www.gbif.org/>

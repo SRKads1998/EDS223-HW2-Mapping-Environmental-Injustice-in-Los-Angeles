@@ -3,7 +3,8 @@ title: "Patterns of Environmental Justice In Los Angeles California"
 format: html
 editor: visual
 author: Stephan Kadonoff 
-Date: 10/18/2025
+date: 11/10/2025
+message: false
 execute: 
   echo: true
   message: false
@@ -21,10 +22,13 @@ library(spData)
 library(here)
 library(paletteer)
 library(patchwork)
+library(knitr)
 
 ```
 
 ```{r}
+#| message: false
+#| warning: false
 # Read in the data for analysis and manipulation.
 
 
@@ -45,15 +49,26 @@ rm(ej_screen)
 ```
 
 ```{r}
+
 #| message: false
+#| warning: false
 # Set CRS of ej_screen_la and birds_la to match HOLC
 ej_screen_la <- st_transform(ej_screen_la, 4326)
 birds_la <- st_transform(birds_la, 4326)
 holc_redline <- st_transform(holc_redline, 4326)
-# Check to make sure it worked and that all three now match
-st_crs(birds_la)
-st_crs(ej_screen_la)
-st_crs(holc_redline)
+
+
+
+```
+
+```{r}
+# Check to make sure it worked and that all three now match and create warning message if they do not
+if(st_crs(ej_screen_la) == st_crs(holc_redline) &
+   st_crs(ej_screen_la) == st_crs(birds_la)) {
+  message("Keep it going! The CRSs match!")
+} else {
+  warning("WOAHHHH There! The CRSs do not match!")
+}
 ```
 
 ## Part 1
@@ -62,18 +77,24 @@ st_crs(holc_redline)
 
 ```{r}
 #| message: false
+#| warning: false
 #conduct initial exploratory map analysis
 tm_shape(holc_redline) +
   tm_borders() +
+  tm_basemap() +
   tm_polygons(col = "grade",
               palette = "-RdYlBu",
               style = "pretty",
-              title = "Exploratory Map")
+              title = "Exploratory Map") +
+  tm_scale_bar() +
+  tm_compass(position = c("top", "left")) 
+  
 ```
 
 ```{r}
 #| message: false
-# Add additional features to map
+#| warning: false
+# Add additional features to map, ensure color palette matches HOLC color scheme
 tmap_mode("plot")
 
 tm_shape(holc_redline) +
@@ -81,11 +102,21 @@ tm_shape(holc_redline) +
   tm_title("Red Lining in Los Angeles") +
   tm_borders() +
   tm_polygons(col = "grade",
-              palette = "-RdYlBu",
+              palette = c( 
+                "A" = "green4",
+                "B" = "skyblue",
+                "C" = "orange",
+                "D" = "red3",
+                "E" = "grey"),
               style = "pretty",
               title = "HOLC Zones") +
   tm_scale_bar() +
-  tm_compass(position = c("top", "right")) 
+  tm_credits("HOLC Grades:   A = Best, 
+                           B = Still Desirable,
+                           C = Declining, 
+                           D = Hazardous",
+             position = c('top', 'right'))
+  tm_compass(position = c("top", "left")) 
 ```
 
 ### 2. Create table summaries
@@ -97,30 +128,34 @@ First, we'll need to merge the HOLC data with the ejscreen_LA data
 ```{r}
 #| message: false
 #| warning: false
-#| echo: true
-#join EJScreen and HOLC via st_join and find the intersection
-#holc_ej_la <- st_join(holc_redline, ej_screen_la, join = st_intersects)
-#encountered error stating that geometry is invalid, so run function to determine which data frame has issues 
- st_is_valid(holc_redline)
-st_is_valid(ej_screen_la)
-# set "holc_redline" as true
+# use st_make_valid function on holc_redline
 holc_redline <- st_make_valid(holc_redline)
 
-# now run join again
+# join holc_redline and ej_screeen_la
 holc_ej_la <- st_join(holc_redline, ej_screen_la, join = st_intersects)
+
 ```
 
 Next, we'll find the percentage of census blocks within each HOLC Grade
 
 ```{r}
-# use the merged dataframe to find the percentages, and drop the geometries.
+#| message: false
+#| warning: false
+# use hold_ej_la to find the percentages of HOLC Zones, and drop the geometries.
 percent_holc <- holc_ej_la %>%
   st_drop_geometry() %>%
   group_by(grade) %>%
   summarise(count = n()) %>%
   mutate(percent = count / sum(count) * 100)
   
-  print(percent_holc)
+print(percent_holc)
+
+# create a table of the percent_holc data with a kable
+
+holc_percent_table <- kable(percent_holc,
+      caption = "Count and Percentage of Properties in LA by HOLC Grade, including Non-Graded Properties",
+      digits = 2)
+holc_percent_table
 ```
 
 ### 3. Create visualizations
@@ -128,6 +163,8 @@ percent_holc <- holc_ej_la %>%
 First, we will need to summarize the data. Specifically, we want to look at % low income, percentile for Particulate Matter, and percentile w/ low life expectancy.
 
 ```{r}
+#| message: false
+#| warning: false
 # summarize ej_holc dataset for easier graphing
 ej_holc_la_summarized <- holc_ej_la %>%
   group_by(grade) %>%
@@ -140,22 +177,52 @@ ej_holc_la_summarized <- holc_ej_la %>%
 Now with the data summarized, we can graph.
 
 ```{r}
+#| message: false
+#| warning: false
 # Graph the mean low income by HOLC Zone (in percentage)
 mean_low_inc_LA <- ej_holc_la_summarized %>%
   ggplot(aes(x = grade, y = mean_low_income, fill = grade)) +
   geom_col() +
-  labs(title = "Percentage of Mean Low Income by HOLC Zone in LA", y = "% Mean Low Income", x = "HOLC Zone")
+  scale_fill_manual(
+    values = c(
+      "A" = "green4",
+      "B" = "skyblue",
+      "C" = "orange",
+      "D" = "red3",
+      "E" = "grey"
+    )
+  ) +
+  labs(title = "Percentage of Mean Low Income by HOLC Zone in LA",
+       y = "% Mean Low Income", x = "HOLC Zone")
 
 # Graph the particulate matter by HOLC Zone
 mean_pm <- ej_holc_la_summarized %>%
   ggplot(aes(x = grade, y = mean_pm, fill = grade)) +
   geom_col() +
+  scale_fill_manual(
+    values = c(
+      "A" = "green4",
+      "B" = "skyblue",
+      "C" = "orange",
+      "D" = "red3",
+      "E" = "grey"
+    )
+  ) +
   labs(title = "Particulate Matter by HOLC Zone", y = "Particulates (PPM)", x = "HOLC Zone")
 
 # Graph the life expectancy percentage by HOLC Zone
 mean_le <- ej_holc_la_summarized %>%
   ggplot(aes(x = grade, y = mean_life_expectancy, fill = grade)) +
   geom_col() +
+  scale_fill_manual(
+    values = c(
+      "A" = "green4",
+      "B" = "skyblue",
+      "C" = "orange",
+      "D" = "red3",
+      "E" = "grey"
+    )
+  ) +
   labs(title = "% with Low Life Expectancy", x = "HOLC Zone")
 mean_low_inc_LA / mean_pm / mean_le
 ```
@@ -164,29 +231,24 @@ mean_low_inc_LA / mean_pm / mean_le
 
 What we are seeing is that there is a clear decrease in life expectancy, while also observing an increase in the amount of particulate matter and lower income as you move from HOLC Zones A to D. This tells us that there is a continuing negative impact due to historical reline grades. Individuals living within these redlined zones are more likely to health and economic hardships then those living outside of them.
 
-## Part 2 Legacy of redlining in biodiversty
+## Part 2 Legacy of redlining in biodiversity
 
-### 1. Create a figure
+### Create a figure
 
-```{r}
-# part 1
-# update birds CRS (may need to)
-
-# join (same as above)
-
-# May need to make valid
-
-# birds_holc_joined <- st_join(holc, birds, join = st_intersects)
-
-
-```
+We will want to begin by joining the HOLC layer with the birds_la shapefile
 
 ```{r}
+#| message: false
+#| warning: false
 # join the birds data with HOLC
 birds_holc <- st_join(holc_redline, birds_la, join = st_intersects)
 ```
 
+Next, with the bird data and HOLC blocs joined, we may find percentages for analysis and visualization.
+
 ```{r}
+#| message: false
+#| warning: false
 # find percentages of birds within each holc grade
 
 percent_birds <- birds_holc %>%
@@ -200,12 +262,21 @@ percent_birds
 bird_percentage_plot <- percent_birds %>%
   ggplot(aes(x = grade, y = count, fill = grade)) +
   geom_col() +
+  scale_fill_manual(
+    values = c(
+      "A" = "green4",
+      "B" = "skyblue",
+      "C" = "orange",
+      "D" = "red3",
+      "E" = "grey"
+    )
+  ) +
   labs(title = "Bird Observations in LA by HOLC Zone", y = "Bird Observations", x = "HOLC Zone")
 bird_percentage_plot
 
 ```
 
-### 2. Findings & Combarison
+### 2. Findings & Comparison
 
 The study lead by Ellis & Soto looked at many different states and metropolitan areas, while our study only looked at Los Angeles. They found greater than 2x sampling density in areas deemed "desirable" over "hazardous".
 
