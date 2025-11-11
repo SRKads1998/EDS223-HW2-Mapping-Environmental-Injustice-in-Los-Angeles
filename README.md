@@ -8,6 +8,8 @@
 
 The purpose of this repository is to serve as an exploration on the ramifications of historical redlining practices which were developed to stifle undeserved communities of color. We developed a map where-in we visualized the historically red-lined zones, and then analyzed environmental data associated with those parcels. We found that even today there are still significant discrepancies in environmental quality and resident health between those living in red-lined zones versus those living in historically more favored areas.
 
+## Repository Contents
+
 ## Content and Data
 
 Within the repository you will find the main analysis file "HW2.qmd" which contains all the coding for the analysis, the "data" folder which contains the files used for analysis (EJScreen shapefile, LA bird observations, and a historical polygon layer of Home Owners' Loan Corporation, or HOLC, zoned areas). Lastly, you will find this ReadMe markdown file.
